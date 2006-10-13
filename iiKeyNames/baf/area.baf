@@ -1,0 +1,8 @@
+IF
+  Global("ii_%area%_%door%", "GLOBAL", 0)
+  OpenState("%door%", TRUE)
+THEN
+  RESPONSE #100
+    SetGlobal("%variable%", "GLOBAL", 1)
+    SetGlobal("ii_%area%_%door%", "GLOBAL", 1)
+END

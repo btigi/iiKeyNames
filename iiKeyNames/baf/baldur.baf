@@ -1,0 +1,38 @@
+// If the door has not been opened, set the key name its original values
+// We also default to these original values
+IF
+  OnCreation()
+THEN
+  RESPONSE #100
+    SetToken("%xtoken_u_name%", %xd_u_name%)
+    SetToken("%xtoken_name%", %xd_name%)
+    Continue()
+END
+
+
+// If the door has been opened, set the key name its new values
+// i.e. ii_%item_no_ext% = 1 = door has been opened
+// This block sets the token when the door is opened
+IF
+  Global("ii_%xitem_no_ext%", "GLOBAL", 1)
+THEN
+  RESPONSE #100
+    SetToken("%xtoken_u_name%", %xn_u_name%)
+    SetToken("%xtoken_name%", %xn_name%)
+    SetGlobal("ii_%xitem_no_ext%", "GLOBAL", 2)
+    Continue()
+END
+
+
+// If the door has been opened, set the key name its new values
+// i.e. ii_%item_no_ext% = 1 = door has been opened
+// This block sets the token on game reloads
+IF
+  OnCreation()
+  !Global("ii_%xitem_no_ext%", "GLOBAL", 0)
+THEN
+  RESPONSE #100
+    SetToken("%xtoken_u_name%", %xn_u_name%)
+    SetToken("%xtoken_name%", %xn_name%)
+    Continue()
+END

@@ -1,0 +1,212 @@
+// ----------------------------------------------------------------------------
+// Name:    Key Names
+// Author:  igi
+// Date:    08/10/2006
+// Version: 1
+// ----------------------------------------------------------------------------
+BACKUP ~iiKeyNames/backup~
+AUTHOR ~igi~
+
+
+LANGUAGE ~English~ ~English~ ~iiKeyNames/Languages/English/setup.tra~
+
+// ------------------------------------------------------------------------------------------------------------------------
+// Readme stuff
+// Some people like to view the readme
+BEGIN @101
+NO_LOG_RECORD
+DESIGNATED 1000
+SUBCOMPONENT @100
+  AT_INTERACTIVE_EXIT ~VIEW iiKeyNames/Readme-iiKeyNames.txt~
+
+
+// And some people don't like to view the readme
+BEGIN @102
+DESIGNATED 2000
+NO_LOG_RECORD
+SUBCOMPONENT @100
+// Do nothing
+
+
+//!----------------------------------------------------------------------------
+BEGIN @10
+
+COPY ~iiKeyNames/2da/iiKeyItems.2da~ ~override~
+COPY ~iiKeyNames/2da/iiKeyTokens.2da~ ~override~
+COPY ~iiKeyNames/2da/iiKeyDoors.2da~ ~override~
+
+// Also need to read the door name, and save it, for later use (with the key)
+
+COPY_EXISTING_REGEXP GLOB ~^\([^Xx]\|[Xx][^Rr]\|[Xx][Rr][^2]\).*\.are$~ ~override~
+  PATCH_IF (SOURCE_SIZE > 0x11b) THEN BEGIN // protects against invalid files
+    READ_LONG 0xA4 "door_count"
+    READ_LONG 0xA8 "door_offset"
+    SPRINT %area_resref% "%SOURCE_RES%"
+
+    FOR (index = 0; index < %door_count% - 1; index = index + 1) BEGIN
+      READ_ASCII (%door_offset% + (index * 200) + 0) %door_name%
+      READ_LONG (%door_offset% + (index * 200) + 40) %flags%
+
+      PATCH_IF ((%flags% & 1024) != 0) BEGIN
+        // Unset the "remove key" flag
+        WRITE_LONG (%door_offset% + (index * 200) + 40) %flags% & 0xFFFFFBFF
+      END
+
+      // Read the item
+      READ_ASCII (%door_offset% + (index * 200) + 120) %key_item%
+
+      // If it's valid, write it out for later use
+      PATCH_IF (FILE_EXISTS_IN_GAME "%key_item%.itm" == 1) THEN BEGIN
+        INNER_ACTION BEGIN
+          COPY_EXISTING ~dplayer2.bcs~ ~override~  // dplayer2 = just a random temp file
+            PATCH_IF !(FILE_CONTAINS_EVALUATED (~iiKeyItems.2da~ ~%key_item%.itm~)) THEN BEGIN
+              INNER_ACTION BEGIN
+                COPY_EXISTING ~iiKeyItems.2da~ ~override~
+                  APPEND ~iiKeyItems.2da~ ~%key_item%.itm %key_item%~
+              END
+            END
+          BUT_ONLY_IF_IT_CHANGES
+        END
+      END
+
+      // If it's valid, write it out for later use
+      PATCH_IF (FILE_EXISTS_IN_GAME "%key_item%.itm" == 1) THEN BEGIN
+        INNER_ACTION BEGIN
+          COPY_EXISTING ~dplayer3.bcs~ ~override~  // dplayer3 = just a random temp file
+            // Since 1 key *may* open more than 1 door (though it would be stupid) we
+            // have to take that into account. The key will be marked as used after one
+            // door, but (technically) it is, so thats ok.
+            // We also need to note the door area, as we'll be extending that area script later
+            //PATCH_IF !(FILE_CONTAINS_EVALUATED (~iiKeyDoors.2da~ ~%key_item%~)) THEN BEGIN
+              INNER_ACTION BEGIN
+                COPY_EXISTING ~iiKeyDoors.2da~ ~override~
+                  APPEND ~iiKeyDoors.2da~ ~%door_name% ii_%key_item% %area_resref%~  // door, item, area
+              END
+            //END
+          BUT_ONLY_IF_IT_CHANGES
+        END
+      END
+
+    END
+  END
+  BUT_ONLY_IF_IT_CHANGES
+
+
+
+
+  COPY_EXISTING ~iiKeyItems.2da~ ~override~
+    COUNT_2DA_ROWS ~1~ "rows"
+    FOR (index = 1; index < rows; index = index + 1) BEGIN
+      READ_2DA_ENTRY "%index%" 0 1 "item"
+      READ_2DA_ENTRY "%index%" 1 1 "item_no_ext"
+  
+      INNER_ACTION BEGIN
+        COPY_EXISTING ~%item%~ ~override~
+            // Load the default strref values  (ORIGINAL VALUES)
+            READ_LONG 0x8 "default_u_name"
+            READ_LONG 0xc "default_name"
+  
+            // Get the associated strings
+            READ_STRREF 0x8 %u_name%
+            READ_STRREF 0xc %name%
+  
+            // Prepend our new text into the string
+            SPRINT %new_u_name% @150 //"USED %u_name%"
+            SPRINT %new_name%   @151 //"USED %name%"
+  
+            // Add our new string back into the dialog.tlk  (MODIFIED VALUES)
+            // Only way to do this is to write it to the itm, and read it back :/
+            // Write it
+            SAY_EVALUATED 0x8 "%new_u_name%"
+            SAY_EVALUATED 0xc "%new_name%"
+            // Read it
+            READ_LONG 0x8 "new_u_name"
+            READ_LONG 0xc "new_name"
+  
+            // Now create a token, so we can change the text in-game
+            SPRINT %token_u_name% "<u_%SOURCE_RES%>"
+            SPRINT %token_name%   "<%SOURCE_RES%>"
+  
+            // Next, write the token to the itm file  (TOKEN VALUES)
+            SAY_EVALUATED 0x8 "%token_u_name%"
+            SAY_EVALUATED 0xc "%token_name%"
+
+            // Alter the token, for use in scripts
+            SPRINT %token_u_name% "u_%SOURCE_RES%"
+            SPRINT %token_name%   "%SOURCE_RES%"
+  
+            // Finally, we need to save stuff for later use
+            // SOURCE_RES, default_u_name, default_name, new_u_name, new_name
+            INNER_ACTION BEGIN
+              COPY_EXISTING ~dplayer2.bcs~ ~override~  // dplayer2 = just a random temp file
+                PATCH_IF !(FILE_CONTAINS_EVALUATED (~iiKeyTokens.2da~ ~%item%~)) THEN BEGIN
+                  INNER_ACTION BEGIN
+                    COPY_EXISTING ~iiKeyTokens.2da~ ~override~
+                      APPEND ~iiKeyTokens.2da~ ~%item% %default_u_name% %default_name% %new_u_name% %new_name% %token_u_name% %token_name% %item_no_ext%~
+                  END
+                END
+              BUT_ONLY_IF_IT_CHANGES
+            END
+  
+        BUT_ONLY_IF_IT_CHANGES
+      END
+    END
+  
+
+
+    COPY_EXISTING ~iiKeyTokens.2da~ ~override~
+      COUNT_2DA_ROWS ~1~ "Tokenrows"
+      FOR (Tokenindex = 1; Tokenindex < Tokenrows; Tokenindex = Tokenindex + 1) BEGIN
+        READ_2DA_ENTRY "%Tokenindex%" 0 1 "xitem"
+        READ_2DA_ENTRY "%Tokenindex%" 1 1 "xd_u_name"
+        READ_2DA_ENTRY "%Tokenindex%" 2 1 "xd_name"
+        READ_2DA_ENTRY "%Tokenindex%" 3 1 "xn_u_name"
+        READ_2DA_ENTRY "%Tokenindex%" 4 1 "xn_name"
+        READ_2DA_ENTRY "%Tokenindex%" 5 1 "xtoken_u_name"
+        READ_2DA_ENTRY "%Tokenindex%" 6 1 "xtoken_name"
+        READ_2DA_ENTRY "%Tokenindex%" 7 1 "xitem_no_ext"
+
+        INNER_ACTION BEGIN
+          // Append a block to set the token
+          EXTEND_TOP ~baldur.bcs~ ~iiKeyNames/baf/baldur.baf~
+            EVALUATE_BUFFER
+        END
+
+        INNER_ACTION BEGIN
+          // Append a block to set the token
+          EXTEND_TOP ~baldur25.bcs~ ~iiKeyNames/baf/baldur.baf~
+            EVALUATE_BUFFER
+        END
+      END
+      BUT_ONLY_IF_IT_CHANGES
+
+
+  // Copy over the door names, and append a script block
+  COPY_EXISTING ~iiKeyDoors.2da~ ~override~
+    COUNT_2DA_ROWS ~1~ "Tokenrows"
+    FOR (Tokenindex = 1; Tokenindex < Tokenrows; Tokenindex = Tokenindex + 1) BEGIN
+      READ_2DA_ENTRY "%Tokenindex%" 0 3 "door"
+      READ_2DA_ENTRY "%Tokenindex%" 1 3 "variable"
+      READ_2DA_ENTRY "%Tokenindex%" 2 3 "area"
+
+      PATCH_IF (FILE_EXISTS_IN_GAME "%area%.bcs" == 1) THEN BEGIN
+        INNER_ACTION BEGIN
+          EXTEND_BOTTOM ~%area%.bcs~ ~iiKeyNames/baf/area.baf~
+          EVALUATE_BUFFER
+        END
+      END
+      ELSE
+      BEGIN
+        INNER_ACTION BEGIN
+          COPY ~iiKeyNames/baf/blank.baf~ ~override/%area%.bcs~
+            EXTEND_BOTTOM ~%area%.bcs~ ~iiKeyNames/baf/area.baf~
+          EVALUATE_BUFFER
+        END
+      END
+    END
+    BUT_ONLY_IF_IT_CHANGES
+
+
+
+// ----------------------------------------------------------------------------
+// EOF
