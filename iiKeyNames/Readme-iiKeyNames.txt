@@ -1,4 +1,4 @@
-Key Names Mod V1
+Key Names Mod V2
 ----------------
 
 +) Contents
@@ -41,6 +41,11 @@ Some key items will still be removed from the players inventory after opening do
 
 +) Section 5. Version History
 =============================
+V2 [05/11/2006]
+  - Added Spanish translation (Thanks to Januszka)
+  - Added Polish translation (Thanks to Yarpen)
+  - Updated to WeiDU 197
+
 V1 [14/10/2006]
   - Initial Release
 

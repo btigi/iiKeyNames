@@ -1,14 +1,16 @@
 // ----------------------------------------------------------------------------
 // Name:    Key Names
 // Author:  igi
-// Date:    08/10/2006
-// Version: 1
+// Date:    005/11/2006
+// Version: 2
 // ----------------------------------------------------------------------------
 BACKUP ~iiKeyNames/backup~
 AUTHOR ~igi~
 
 
 LANGUAGE ~English~ ~English~ ~iiKeyNames/Languages/English/setup.tra~
+LANGUAGE ~Spanish (Translation by Januszka)~  ~Spanish~ ~iiKeyNames/Languages/Spanish/setup.tra~
+LANGUAGE ~Polish (Translation by Yarpen)~  ~Polish~ ~iiKeyNames/Languages/Polish/setup.tra~
 
 // ------------------------------------------------------------------------------------------------------------------------
 // Readme stuff
