@@ -1,11 +1,10 @@
 // ----------------------------------------------------------------------------
 // Name:    Key Names
 // Author:  igi
-// Date:    005/11/2006
-// Version: 2
 // ----------------------------------------------------------------------------
 BACKUP ~iiKeyNames/backup~
 AUTHOR ~igi~
+VERSION ~2.1~
 
 
 LANGUAGE ~English~ ~English~ ~iiKeyNames/Languages/English/setup.tra~
