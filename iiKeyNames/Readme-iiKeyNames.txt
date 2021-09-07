@@ -41,6 +41,9 @@ Some key items will still be removed from the players inventory after opening do
 
 +) Section 5. Version History
 =============================
+V2.1 [07/09/2021]
+ - Maintenance release RE: mod packaging
+
 V2 [05/11/2006]
   - Added Spanish translation (Thanks to Januszka)
   - Added Polish translation (Thanks to Yarpen)
