@@ -55,7 +55,4 @@ V1 [14/10/2006]
 
 +) Section 6. Contact Details
 =============================
-Feedback, comments, queries, questions and suggestion should be sent to bt_igi / igi (Marc Wrench)
-E-mail: igi@mcwrench.com
-WWW   : http://www.teambg.eu
-WWW   : http://www.mcwrench.com
+Feedback, comments, queries, questions and suggestion should be sent to igi / bt_igi / iggti
